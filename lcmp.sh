@@ -2,6 +2,11 @@
 PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
 export PATH
 
+OS=$(cat /etc/os-release|grep PLATFORM_ID|grep -oE "el7")
+if [[ $OS = el7 ]]; then
+echo ＂不支持 RHEL,Centos/7＂ && exit 1
+fi
+
 OS1=$(cat /etc/os-release|grep PLATFORM_ID|grep -oE "el10")
 if [[ $OS1 = el10 ]]; then
 echo ＂不支持 RHEL,AlmaLinux,Rocky/10＂ && exit 1
