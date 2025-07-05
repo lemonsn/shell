@@ -62,7 +62,7 @@ rm -rf mariadb-10.11.13-rhel-9-x86_64-rpms.tar
 fi
 cd mariadb
 /opt/mariadb/setup_repository
-yum install MariaDB-common MariaDB-server MariaDB-client MariaDB-shared MariaDB-backup -y
+dnf install MariaDB-common MariaDB-server MariaDB-client MariaDB-shared MariaDB-backup -y
 lnum=$(sed -n '/\[mariadb\]/=' /etc/my.cnf.d/server.cnf)
 sed -i "${lnum}acharacter-set-server = utf8mb4\n\n\[client-mariadb\]\ndefault-character-set = utf8mb4" /etc/my.cnf.d/server.cnf
 systemctl enable mariadb
