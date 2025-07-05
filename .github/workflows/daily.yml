@@ -1,0 +1,93 @@
+name: Build for Release
+
+on:
+  schedule:
+    - cron: '0 21 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        platform: [ubuntu-latest]
+        target: 
+          - darwin-amd64
+          - darwin-arm64
+          - windows-amd64
+          - linux-arm64-musl
+          - linux-amd64-musl
+          - windows-arm64
+          - android-arm64
+    name: Build
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Get short SHA
+        uses: benjlevesque/short-sha@v3.0
+        id: short-sha
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Setup web
+        run: bash build.sh dev web
+
+      - name: Build binaries
+        uses: go-cross/cgo-actions@v1
+        with:
+          targets: ${{ matrix.target }}
+          musl-target-format: $os-$musl-$arch
+          out-dir: build
+          x-flags: |
+            github.com/OpenListTeam/OpenList/internal/conf.BuiltAt=$built_at
+            github.com/OpenListTeam/OpenList/internal/conf.GitAuthor=OpenList
+            github.com/OpenListTeam/OpenList/internal/conf.GitCommit=$git_commit
+            github.com/OpenListTeam/OpenList/internal/conf.Version=$tag
+            github.com/OpenListTeam/OpenList/internal/conf.WebVersion=dev
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: openlist_${{ steps.short-sha.outputs.sha }}_${{ matrix.target }}
+          path: build/*
+
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      contents: write
+    steps:
+      - name: Generate UTC timestamp
+        id: timestamp
+        run: |
+          UTC_TIME=$(date -u +'%Y-%m-%d %H:%M')
+          TAG_NAME=$(date -u +'build-%Y%m%d-%H%M')
+          echo "date=$UTC_TIME" >> $GITHUB_OUTPUT
+          echo "tag=$TAG_NAME" >> $GITHUB_OUTPUT
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.timestamp.outputs.tag }}
+          name: "Build @ ${{ steps.timestamp.outputs.date }} UTC"
+          body: |
+            Automated build release
+            - Generated at **${{ steps.timestamp.outputs.date }} UTC**
+          draft: false
+          prerelease: false
+          files: |
+            artifacts/**/*
