@@ -181,7 +181,7 @@ set_custom_ssh_port() {
     
     # 修改SSH配置文件
     if [ "$old_port" = "22" ]; then
-        sed -i "s/^Port 22/Port $new_port/g" $SSH_CONFIG
+        sed -i "s/^#Port 22/Port $new_port/g" $SSH_CONFIG
     else
         sed -i "s/^Port [0-9]*/Port $new_port/g" $SSH_CONFIG
     fi
