@@ -235,7 +235,7 @@ restore_default_ssh() {
     echo -e "${GREEN}已备份SSH配置文件至：$BACKUP_DIR/sshd_config_bak_$DATE_STAMP${NC}"
     
     # 修改SSH配置文件为默认端口
-    sed -i "s/^Port [0-9]*/Port 22/g" $SSH_CONFIG
+    sed -i "s/^Port [0-9]*/#Port 22/g" $SSH_CONFIG
     
     # 同步防火墙操作：先添加默认端口，再删除旧端口
     firewall-cmd --permanent --add-port=22/tcp
