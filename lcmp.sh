@@ -13,7 +13,7 @@ echo ＂不支持 RHEL,AlmaLinux,Rocky/10＂ && exit 1
 fi
 
 #安装依赖
-yum install wget tar gzip chkconfig -y
+dnf install wget tar gzip chkconfig -y
 
 #安装caddy
 cd /usr/local
